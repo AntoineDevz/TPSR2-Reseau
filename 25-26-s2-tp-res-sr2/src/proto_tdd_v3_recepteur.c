@@ -40,21 +40,22 @@ int main(int argc, char* argv[])
             pack.type = ACK;
             pack.num_seq = pdata.num_seq;
             pack.lg_info = 0;
-            pack.somme_ctrl = generer_somme_controle(pack);
-          if(pdata.num_seq == paquet_attendu) {
+            if(pdata.num_seq == paquet_attendu) {
             /* extraction des donnees du paquet recu */
             for (int i=0; i<pdata.lg_info; i++) {
                 message[i] = pdata.info[i];
             }
             fin = vers_application(message, pdata.lg_info);
             paquet_attendu = (paquet_attendu+1)%16;
-          } else {
-            pack.num_seq = (paquet_attendu-1)%16;
-          }
-          
- 
+            } else {
+                pack.num_seq = (paquet_attendu + 15) % 16;
+            }
+            pack.somme_ctrl = generer_somme_controle(pack);
         } else {
-            pack.num_seq = (paquet_attendu-1)%16;
+            pack.type = ACK;
+            pack.lg_info = 0;
+            pack.num_seq = (paquet_attendu + 15) % 16;
+            pack.somme_ctrl = generer_somme_controle(pack);
         }
         vers_reseau(&pack);
     }

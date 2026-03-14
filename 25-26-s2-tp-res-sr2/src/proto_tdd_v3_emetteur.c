@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     paquet_t pack;                  /* paquet utilisé par le protocole */
     paquet_t tab_p[16];
     int evenement; 
-    int borne_inf = 0, curseur=0, i=0;
+    int borne_inf = 0, curseur=0;
     int taille_fenetre;
     int param = atoi(argv[1]);
     if(param<16 && param>0) {
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
             evenement = attendre();
             if (evenement == PAQUET_RECU) {
                 de_reseau(&pack);
-                if (dans_fenetre(borne_inf,curseur,taille_fenetre) && verifier_somme_controle(pack)){
+                if (pack.type == ACK && verifier_somme_controle(pack) && dans_fenetre(borne_inf, pack.num_seq, taille_fenetre)){
                     borne_inf = (pack.num_seq + 1) % 16;
                     arret_temporisateur();
                     if (borne_inf != curseur) {
@@ -76,12 +76,14 @@ int main(int argc, char* argv[])
                     }
                 }
             } else {
-                i = borne_inf;
+                int i = borne_inf;
+                arret_temporisateur();
                 depart_temporisateur(70);
-                do {
+
+                while (i != curseur) {
                     vers_reseau(&tab_p[i]);
-                    curseur = (curseur + 1) % 16;
-                } while (i!=curseur);
+                    i = (i + 1) % 16;
+                }
             }
         }
     }
